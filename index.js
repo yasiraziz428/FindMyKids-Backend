@@ -44,11 +44,31 @@ app.get("/users/childs", (req, res) => {
   });
 });
 
-app.post("/users", (req, res) => {
-  const data = req.body;
-  addDoc(User, data).then(() => {
-    res.send("successfully added");
-  });
+app.post("/users", async (req, res) => {
+  const userEmail = req.body.data.email;
+  const userDevice = req.body.data.deviceID;
+  console.log(userEmail);
+  console.log(userDevice);
+  const userRef = collection(db, "users");
+  const userSnap = await getDocs(userRef);
+  const responseObject = {
+    statusCode: 200,
+  };
+  const user = userSnap.docs
+    .map((doc) => doc.data())
+    .filter((user) => user.email == userEmail && user.deviceID == userDevice);
+
+  if (user.length > 0) {
+    responseObject.message = "Exists";
+    res.send(responseObject);
+  } else {
+    const obj = { email: userEmail, deviceID: userDevice };
+    const colRef = collection(db, "users");
+    addDoc(colRef, obj).then(() => {
+      responseObject.message = "Successfully registered!";
+      res.send(responseObject);
+    });
+  }
 });
 
 // Handling requests targeting a particular user //
