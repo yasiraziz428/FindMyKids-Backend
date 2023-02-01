@@ -1,4 +1,4 @@
-import { User, db } from "./config.js";
+import { User, db, auth } from "./config.js";
 import express from "express";
 import {
   addDoc,
@@ -8,8 +8,17 @@ import {
   getDoc,
   getDocs,
   onSnapshot,
+  query,
+  setDoc,
   updateDoc,
+  where,
 } from "firebase/firestore";
+
+import {
+  createUserWithEmailAndPassword,
+  signOut,
+  signInWithEmailAndPassword,
+} from "firebase/auth";
 
 const app = express();
 
@@ -44,31 +53,118 @@ app.get("/users/childs", (req, res) => {
   });
 });
 
-app.post("/users", async (req, res) => {
-  const userEmail = req.body.data.email;
-  const userDevice = req.body.data.deviceID;
-  console.log(userEmail);
-  console.log(userDevice);
-  const userRef = collection(db, "users");
-  const userSnap = await getDocs(userRef);
-  const responseObject = {
-    statusCode: 200,
-  };
-  const user = userSnap.docs
-    .map((doc) => doc.data())
-    .filter((user) => user.email == userEmail && user.deviceID == userDevice);
+app.post("/users/signin", (req, res) => {
+  const email = req.body.data.email;
+  const password = req.body.data.password;
 
-  if (user.length > 0) {
-    responseObject.message = "Exists";
-    res.send(responseObject);
-  } else {
-    const obj = { email: userEmail, deviceID: userDevice };
-    const colRef = collection(db, "users");
-    addDoc(colRef, obj).then(() => {
-      responseObject.message = "Successfully registered!";
-      res.send(responseObject);
+  console.log(email);
+  console.log(password);
+  console.log("signin");
+
+  signInWithEmailAndPassword(auth, email, password)
+    .then((cred) => {
+      const { user } = cred;
+
+      res.send(user);
+    })
+    .catch((err) => {
+      res.send(err.code);
     });
-  }
+});
+
+app.post("/users", (req, res) => {
+  // const uEmail = req.body.data.user.email;
+  // const id = req.body.data.user.uid;
+  // const deviceID = req.body.data.deviceID;
+  // const code = req.body.data.rand;
+  let code1 = "A1B34F";
+  let code2 = "AHS32F";
+  let code3 = "A13334F";
+  let code4 = "C1B341";
+  let code5 = "11B34Q";
+
+  const composite_no = code1;
+  // console.log(uEmail);
+  // console.log(id);
+  // console.log(deviceID);
+  // console.log(code);
+  console.log(id, "rand: ", code1);
+
+  // const data = {
+  //   uEmail,
+  //   id,
+  //   deviceID,
+  //   code,
+  // };
+  const colRef = collection(db, "users");
+
+  setDoc(doc(colRef, composite_no), {
+    name: "Los Angeles",
+    state: "CA",
+    country: "PAK",
+    capital: false,
+    population: 860000,
+    regions: ["west_coast", "norcal"],
+  });
+  // addDoc(colRef, req.body.data).then((response) => res.send(response));
+});
+
+app.post("/users/signout", (req, res) => {
+  signOut(auth)
+    .then(() => res.send("The user signed out!"))
+    .catch((err) => res.send(err.message));
+});
+
+app.post("/users/signup", async (req, res) => {
+  const email = req.body.data.email;
+  const password = req.body.data.password;
+  const deviceID = req.body.data.deviceID;
+
+  console.log(email);
+  console.log(password);
+  console.log(deviceID);
+  console.log("signup");
+
+  createUserWithEmailAndPassword(auth, email, password)
+    .then((cred) => {
+      const colRef = collection(db, "users");
+      addDoc(colRef, { email, deviceID })
+        .then(() => console.log("Successfully added"))
+        .catch((err) => console.log(err.message));
+      const { user } = cred;
+      res.send(user);
+    })
+    .catch((err) => {
+      res.send(err.code);
+    });
+
+  ///////////////////////////////////////
+  // {
+  //   const userEmail = req.body.data.email;
+  //   const userDevice = req.body.data.deviceID;
+  //   console.log(userEmail);
+  //   console.log(userDevice);
+  //   const userRef = collection(db, "users");
+  //   const userSnap = await getDocs(userRef);
+  //   const responseObject = {
+  //     statusCode: 200,
+  //   };
+  //   const user = userSnap.docs
+  //     .map((doc) => doc.data())
+  //     .filter((user) => user.email == userEmail && user.deviceID == userDevice);
+
+  //   if (user.length > 0) {
+  //     responseObject.message = "Exists";
+  //     res.send(responseObject);
+  //   } else {
+  //     const obj = { email: userEmail, deviceID: userDevice };
+  //     const colRef = collection(db, "users");
+  //     addDoc(colRef, obj).then(() => {
+  //       responseObject.message = "Successfully registered!";
+  //       res.send(responseObject);
+  //     });
+  //   }
+  // }
 });
 
 // Handling requests targeting a particular user //
