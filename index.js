@@ -72,6 +72,14 @@ app.post("/users/signin", (req, res) => {
     });
 });
 
+let i = 0;
+app.post("/users/coordinate", (req, res) => {
+  const { latitude, longitude } = req.body.data;
+  console.log("====> " + ++i, latitude, longitude);
+
+  res.json("");
+});
+
 app.post("/users", (req, res) => {
   // const uEmail = req.body.data.user.email;
   // const id = req.body.data.user.uid;
